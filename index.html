@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Store Cash Memo</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            margin: 20px;
+            background-color: #f8f8f8;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        h2, address {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, button, table {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            text-align: left;
+            padding: 8px;
+        }
+        .total {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Nibedita Medical Store Cash Memo</h2>
+        <address>18/2, Rankin Street, Wari, Dhaka</address>
+        <address>Phone: 01915824432</address> 
+
+        <h3>Customer Details</h3>
+        <label for="customer-name">Name:</label>
+        <input type="text" id="customer-name" placeholder="Abdur Rahaman">
+
+        <label for="address">Address:</label>
+        <input type="text" id="address" placeholder="Wari Dhaka">
+
+        <label for="phone">Phone:</label>
+        <input type="text" id="phone" placeholder="Enter phone number">
+
+        <label for="date">Date:</label>
+        <input type="date" id="date">
+
+        <h3>Medicine Details</h3>
+        <label for="medicine-name">Medicine Name:</label>
+        <input type="text" id="medicine-name" placeholder="Enter medicine name">
+
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" placeholder="Enter quantity">
+
+        <label for="price">Price per unit:</label>
+        <input type="number" id="price" placeholder="Enter price">
+
+        <button id="add-medicine">Add Medicine</button>
+
+        <h3>Medicine List</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Medicine</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="medicine-list"></tbody>
+        </table>
+
+        <div class="total">Total Amount: <span id="total-amount">0</span></div>
+        <div class="total">VAT (5%): <span id="vat">0</span></div>
+        <div class="total">Discount (5%): <span id="discount">0</span></div>
+        <div class="total">Final Total: <span id="final-total">0</span></div>
+
+        <button id="generate-pdf">Generate PDF</button>
+
+        <h4 >Powered by RKSOFTBD Ltd.</h3>
+    </div>
+
+    <!-- Include jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        const medicineList = document.getElementById('medicine-list');
+        const totalAmountEl = document.getElementById('total-amount');
+        const vatEl = document.getElementById('vat');
+        const discountEl = document.getElementById('discount');
+        const finalTotalEl = document.getElementById('final-total');
+
+        let totalAmount = 0;
+
+        document.getElementById('add-medicine').addEventListener('click', () => {
+            const name = document.getElementById('medicine-name').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const price = parseFloat(document.getElementById('price').value);
+
+            if (name && quantity > 0 && price > 0) {
+                const subtotal = quantity * price;
+                totalAmount += subtotal;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${name}</td>
+                    <td>${quantity}</td>
+                    <td>${price.toFixed(2)}</td>
+                    <td>${subtotal.toFixed(2)}</td>
+                `;
+                medicineList.appendChild(row);
+
+                updateTotals();
+                clearInputs();
+            } else {
+                alert('Please fill out all fields correctly.');
+            }
+        });
+
+        function updateTotals() {
+            const vat = totalAmount * 0.05;
+            const discount = totalAmount * 0.05;
+            const finalTotal = totalAmount + vat - discount;
+
+            totalAmountEl.textContent = totalAmount.toFixed(2);
+            vatEl.textContent = vat.toFixed(2);
+            discountEl.textContent = discount.toFixed(2);
+            finalTotalEl.textContent = finalTotal.toFixed(2);
+        }
+
+        function clearInputs() {
+            document.getElementById('medicine-name').value = '';
+            document.getElementById('quantity').value = '';
+            document.getElementById('price').value = '';
+        }
+
+        document.getElementById('generate-pdf').addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: [80, 297] });
+
+            let y = 10; 
+            doc.setFont("Courier", "bold");
+            doc.setFontSize(10);
+            doc.text("Nibedita Medical Store", 40, y, { align: "center" });
+            y += 5;
+            doc.setFontSize(8);
+            doc.setFont("Courier", "normal");
+            doc.text("18/2, Rankin Street, Wari, Dhaka", 40, y, { align: "center" });
+            y += 5;
+            doc.text("Phone: 01915824432", 40, y, { align: "center" });
+            y += 5;
+
+            const customerName = document.getElementById('customer-name').value;
+            const address = document.getElementById('address').value;
+            const phone = document.getElementById('phone').value;
+            const date = document.getElementById('date').value;
+
+            doc.text('------------------------------------------', 5, y);
+            y += 5;
+            doc.text(`Name: ${customerName}`, 5, y);
+            y += 5;
+            doc.text(`Address: ${address}`, 5, y);
+            y += 5;
+            doc.text(`Phone: ${phone}`, 5, y);
+            y += 5;
+            doc.text(`Date: ${date}`, 5, y);
+            y += 5;
+
+            doc.text('------------------------------------------', 5, y);
+            y += 5;
+            // Table Header
+            doc.text("Medicine", 5, y);
+            doc.text("Qty", 40, y);
+            doc.text("Unit-Price", 50, y);
+            y += 5;
+
+            // Table Data
+            Array.from(medicineList.children).forEach(row => {
+                const cols = row.children;
+                doc.text(cols[0].textContent, 5, y);
+                doc.text(cols[1].textContent, 40, y);
+                doc.text(cols[2].textContent, 50, y);
+                y += 5;
+            });
+
+            doc.text('------------------------------------------', 5, y);
+        
+            y += 5;
+            doc.text(`Total: ${totalAmountEl.textContent} BDT`, 5, y);
+            y += 5;
+            doc.text(`VAT: ${vatEl.textContent} BDT`, 5, y);
+            y += 5;
+            doc.text(`Discount: ${discountEl.textContent} BDT`, 5, y);
+            y += 5;
+            doc.text(`Final Total: ${finalTotalEl.textContent} BDT`, 5, y);
+            y += 5;
+            doc.text('------------------------------------------', 5, y);
+            y += 15;
+            doc.text('Thanks for Choosing us..', 5, y);
+            y += 3;
+            doc.text('Powered By RKSOFTBD Ltd.', 5, y);
+
+            doc.save("cash_memo.pdf");
+        });
+    </script>
+</body>
+</html>
